@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 
 from . import metrics
-from .mock_llm import FakeLLM
+from .mock_llm import INPUT_COST_PER_MTOKEN, OUTPUT_COST_PER_MTOKEN, FakeLLM
 from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
@@ -71,8 +71,9 @@ class LabAgent:
                 },
                 version=prompt.version,
             )
-            # TODO (CP2): instrument retrieve() and FakeLLM.generate() as child
-            # observations. The nested generation must receive prompt, usage and cost.
+            # retrieve() và FakeLLM.generate() đã được bọc @observe nên tự sinh child
+            # observation: "retrieval" (retriever) và "generation" (model/token/cost).
+            # propagate_attributes(prompt=...) gắn prompt managed vào span generation.
             with propagate_attributes(prompt=prompt.managed_prompt):
                 response = self.llm.generate(prompt.text)
             quality_score = self._heuristic_quality(message, response.text, docs)
@@ -99,8 +100,9 @@ class LabAgent:
         )
 
     def _estimate_cost(self, tokens_in: int, tokens_out: int) -> float:
-        input_cost = (tokens_in / 1_000_000) * 3
-        output_cost = (tokens_out / 1_000_000) * 15
+        # Dùng chung đơn giá với FakeLLM để log cost và trace cost không lệch nhau.
+        input_cost = (tokens_in / 1_000_000) * INPUT_COST_PER_MTOKEN
+        output_cost = (tokens_out / 1_000_000) * OUTPUT_COST_PER_MTOKEN
         return round(input_cost + output_cost, 6)
 
     def _heuristic_quality(self, question: str, answer: str, docs: list[str]) -> float:

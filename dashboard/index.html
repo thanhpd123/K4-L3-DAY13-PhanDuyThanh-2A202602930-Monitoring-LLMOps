@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>K4-L3B Day 13 Monitoring & LLMOps — dashboard runtime</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px 32px 48px; background: #0f172a; color: #e2e8f0;
+           font-family: "Segoe UI", system-ui, sans-serif; }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 18px; margin: 12px 0 26px;
+             font-size: 14px; color: #94a3b8; }
+    .meta strong { color: #e2e8f0; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(280px, 1fr)); gap: 18px; }
+    .card { background: #16233b; border: 1px solid #23324e; border-radius: 12px;
+             padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .card header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .card h2 { margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: #cbd5f5; }
+    .pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+    .pill.ok { background: #14532d; color: #86efac; }
+    .pill.bad { background: #7f1d1d; color: #fecaca; }
+    .question { margin: 0; font-size: 13px; color: #94a3b8; min-height: 34px; }
+    .value { margin: 0; font-size: 24px; font-weight: 700; color: #f8fafc; }
+    .detail { margin: 0; font-size: 12.5px; color: #cbd5f5; min-height: 32px; }
+    .chart { display: flex; align-items: flex-end; gap: 3px; height: 62px;
+              padding: 6px 8px; background: #0b1120; border-radius: 8px; }
+    .bar { flex: 1; min-width: 4px; background: linear-gradient(180deg, #60a5fa, #2563eb);
+            border-radius: 3px 3px 0 0; }
+    .axis { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; }
+    footer { display: flex; justify-content: space-between; gap: 12px; font-size: 12px;
+              color: #94a3b8; border-top: 1px solid #23324e; padding-top: 8px; }
+    .muted { color: #64748b; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>K4-L3B Day 13 Monitoring & LLMOps — Dashboard runtime</h1>
+  <div class="meta">
+    <span>Nguồn dữ liệu: <strong>data/logs.jsonl</strong></span>
+    <span>Time range: <strong>10:01:17 → 11:01:17 (UTC+7, 60 phút)</strong></span>
+    <span>Refresh: <strong>30s</strong></span>
+    <span>Bản ghi API trong cửa sổ: <strong>140</strong></span>
+    <span>Dựng lúc: <strong>2026-09-30 11:01:21</strong></span>
+  </div>
+  <div class="grid">
+        <section class="card" id="latency">
+          <header>
+            <h2>Latency percentiles and TTFT</h2>
+            <span class="pill ok">ĐẠT NGƯỠNG</span>
+          </header>
+          <p class="question">Request có chậm không? P50/P95/P99 và TTFT đang ở mức nào?</p>
+          <p class="value">2,653 ms (P95)</p>
+          <p class="detail">P50 152 ms · P95 2,653 ms · P99 2,653 ms · TTFT P95 51 ms</p>
+          <div class="chart"><div class="bar" style="height:100%" title="10:48: 1.896e+04"></div><div class="bar" style="height:13%" title="10:49: 2,501"></div><div class="bar" style="height:13%" title="10:50: 2,495"></div><div class="bar" style="height:14%" title="10:51: 2,681"></div><div class="bar" style="height:14%" title="11:01: 2,564"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <footer>
+            <span>Đơn vị: <strong>ms</strong></span>
+            <span>Ngưỡng: <strong>p95 lte 3000</strong></span>
+          </footer>
+        </section>
+        <section class="card" id="traffic">
+          <header>
+            <h2>Request traffic</h2>
+            <span class="pill ok">ĐẠT NGƯỠNG</span>
+          </header>
+          <p class="question">Hệ thống đang nhận bao nhiêu request theo thời gian?</p>
+          <p class="value">5.33 req/phút</p>
+          <p class="detail">70 request trong 13.1 phút có dữ liệu (cửa sổ dashboard 60 phút)</p>
+          <div class="chart"><div class="bar" style="height:100%" title="10:48: 30"></div><div class="bar" style="height:33%" title="10:49: 10"></div><div class="bar" style="height:33%" title="10:50: 10"></div><div class="bar" style="height:33%" title="10:51: 10"></div><div class="bar" style="height:33%" title="11:01: 10"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <footer>
+            <span>Đơn vị: <strong>requests_per_minute</strong></span>
+            <span>Ngưỡng: <strong>rate_per_minute gte 1</strong></span>
+          </footer>
+        </section>
+        <section class="card" id="errors">
+          <header>
+            <h2>Error rate and retrieval success</h2>
+            <span class="pill bad">VƯỢT NGƯỠNG</span>
+          </header>
+          <p class="question">Error rate có tăng không, retrieval có đang fail không?</p>
+          <p class="value">5.71 % error rate</p>
+          <p class="detail">4 lỗi / 70 request · retrieval success 94% · breakdown {'RuntimeError': 4}</p>
+          <div class="chart"><div class="bar" style="height:100%" title="10:48: 4"></div></div><div class="axis"><span>10:48</span><span>10:48</span></div>
+          <footer>
+            <span>Đơn vị: <strong>percent</strong></span>
+            <span>Ngưỡng: <strong>error_rate_pct lte 2</strong></span>
+          </footer>
+        </section>
+        <section class="card" id="cost">
+          <header>
+            <h2>Cost over time</h2>
+            <span class="pill ok">ĐẠT NGƯỠNG</span>
+          </header>
+          <p class="question">Chi phí có tăng bất thường không?</p>
+          <p class="value">$0.136647</p>
+          <p class="detail">trung bình $0.002070 mỗi request</p>
+          <div class="chart"><div class="bar" style="height:100%" title="10:48: 0.05728"></div><div class="bar" style="height:31%" title="10:49: 0.01763"></div><div class="bar" style="height:35%" title="10:50: 0.02021"></div><div class="bar" style="height:39%" title="10:51: 0.02258"></div><div class="bar" style="height:33%" title="11:01: 0.01894"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <footer>
+            <span>Đơn vị: <strong>usd</strong></span>
+            <span>Ngưỡng: <strong>total lte 2.5</strong></span>
+          </footer>
+        </section>
+        <section class="card" id="tokens">
+          <header>
+            <h2>Input and output tokens</h2>
+            <span class="pill ok">ĐẠT NGƯỠNG</span>
+          </header>
+          <p class="question">Input/output token có dài bất thường không?</p>
+          <p class="value">2,364 in / 8,637 out</p>
+          <p class="detail">tổng 11,001 token trên 66 phản hồi</p>
+          <div class="chart"><div class="bar" style="height:100%" title="10:48: 4,534"></div><div class="bar" style="height:32%" title="10:49: 1,446"></div><div class="bar" style="height:36%" title="10:50: 1,618"></div><div class="bar" style="height:41%" title="10:51: 1,870"></div><div class="bar" style="height:34%" title="11:01: 1,533"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <footer>
+            <span>Đơn vị: <strong>tokens</strong></span>
+            <span>Ngưỡng: <strong>sum_by_field lte 50000</strong></span>
+          </footer>
+        </section>
+        <section class="card" id="quality">
+          <header>
+            <h2>Quality proxy</h2>
+            <span class="pill ok">ĐẠT NGƯỠNG</span>
+          </header>
+          <p class="question">Quality proxy có giảm dưới mức chấp nhận được không?</p>
+          <p class="value">0.879 / 1</p>
+          <p class="detail">trung bình trên 66 phản hồi đã chấm</p>
+          <div class="chart"><div class="bar" style="height:100%" title="10:48: 22.8"></div><div class="bar" style="height:39%" title="10:49: 8.8"></div><div class="bar" style="height:39%" title="10:50: 8.8"></div><div class="bar" style="height:39%" title="10:51: 8.8"></div><div class="bar" style="height:39%" title="11:01: 8.8"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <footer>
+            <span>Đơn vị: <strong>score_0_to_1</strong></span>
+            <span>Ngưỡng: <strong>mean gte 0.75</strong></span>
+          </footer>
+        </section>
+  </div>
+</body>
+</html>

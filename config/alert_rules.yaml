@@ -1,25 +1,31 @@
 alerts:
-  - name: TODO_alert_1
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: HighLatencyP95
+    severity: warning
+    condition: 'p95(response_sent.latency_ms) > 3000 trong 300 giây'
+    duration: 5m
     type: symptom-based
     channel: slack
-    owner: TODO
+    slack_channel: '#k4-l3b-alerts'
+    owner: student-2A202602930
+    user_impact: 'Người dùng phải chờ hơn 3 giây mới nhận được câu trả lời.'
     runbook: docs/alerts.md#alert-1
-  - name: TODO_alert_2
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: RetrievalFailureSpike
+    severity: critical
+    condition: 'error_rate_pct > 2 hoặc retrieval_success_rate_pct < 90 trong 600 giây'
+    duration: 10m
     type: symptom-based
     channel: slack
-    owner: TODO
+    slack_channel: '#k4-l3b-alerts'
+    owner: student-2A202602930
+    user_impact: 'Người dùng nhận câu trả lời thiếu context hoặc lỗi hẳn 500.'
     runbook: docs/alerts.md#alert-2
-  - name: TODO_alert_3
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: CostAndTokenSpike
+    severity: warning
+    condition: 'sum(response_sent.cost_usd) > 2.5 hoặc tokens_out tăng gấp 3 lần baseline trong 900 giây'
+    duration: 15m
     type: symptom-based
     channel: slack
-    owner: TODO
+    slack_channel: '#k4-l3b-alerts'
+    owner: student-2A202602930
+    user_impact: 'Chi phí mỗi request tăng vọt, ngân sách ngày có thể bị vượt.'
     runbook: docs/alerts.md#alert-3

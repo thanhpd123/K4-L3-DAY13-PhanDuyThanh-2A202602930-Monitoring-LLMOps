@@ -5,6 +5,11 @@ import time
 from dataclasses import dataclass
 
 from .incidents import STATE
+from .tracing import get_langfuse_client, observe
+
+# Đơn giá dùng chung với LabAgent để log cost và trace cost luôn khớp nhau.
+INPUT_COST_PER_MTOKEN = 3.0
+OUTPUT_COST_PER_MTOKEN = 15.0
 
 
 @dataclass
@@ -25,6 +30,7 @@ class FakeLLM:
     def __init__(self, model: str = "claude-sonnet-4-5") -> None:
         self.model = model
 
+    @observe(name="generation", as_type="generation", capture_input=False, capture_output=False)
     def generate(self, prompt: str) -> FakeResponse:
         started = time.perf_counter()
         time.sleep(0.05)  # mô phỏng thời điểm token đầu tiên sẵn sàng
@@ -38,9 +44,22 @@ class FakeLLM:
             "Starter answer. You should improve this output logic and add better quality checks. "
             "Use retrieved context and keep responses concise."
         )
-        return FakeResponse(
+        response = FakeResponse(
             text=answer,
             usage=FakeUsage(input_tokens, output_tokens),
             model=self.model,
             ttft_ms=ttft_ms,
         )
+        # Ghi model/token/cost vào chính span generation để waterfall có đủ dữ liệu.
+        cost_usd = round(
+            (input_tokens / 1_000_000) * INPUT_COST_PER_MTOKEN
+            + (output_tokens / 1_000_000) * OUTPUT_COST_PER_MTOKEN,
+            6,
+        )
+        get_langfuse_client().update_current_generation(
+            model=self.model,
+            metadata={"ttft_ms": ttft_ms, "cost_spike": STATE["cost_spike"]},
+            usage_details={"input": input_tokens, "output": output_tokens},
+            cost_details={"total": cost_usd},
+        )
+        return response

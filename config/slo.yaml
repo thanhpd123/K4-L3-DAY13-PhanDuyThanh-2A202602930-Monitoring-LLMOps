@@ -7,7 +7,20 @@ primary_slo:
     total_event: 'event == "request_received"'
   target_percent: 99.5
   error_budget_percent: 0.5
-  note: Học viên phải giải thích hoặc điều chỉnh ngưỡng bằng baseline của mình. Ví dụ nếu có 10,000 request trong cửa sổ 28 ngày, error budget 0.5% nghĩa là tối đa 50 request được phép không đạt SLO.
+  rationale: >-
+    Ngưỡng 3000ms được chọn từ baseline thật của bài làm: P50 khoảng 400ms,
+    P95 khoảng 1600ms và TTFT P95 chỉ khoảng 50ms. Ngưỡng này rộng hơn tail
+    latency bình thường nhưng vẫn bắt được sự cố retrieval chậm, vì khi bật
+    incident practice rag_slow thì một request nhảy lên trên 3 giây.
+  error_budget_math: >-
+    SLO 99.5% trong 28 ngày nghĩa là error budget 0.5%. Nếu workload có 10,000
+    request thì tối đa 50 request được phép lỗi hoặc chậm hơn 3000ms. Khi vượt
+    50 request, hệ thống đã tiêu hết error budget của cửa sổ 28 ngày và phải
+    dừng mọi thay đổi rủi ro (prompt mới, deploy mới) cho tới khi hồi phục.
+  burn_rate_note: >-
+    Alert latency dùng cửa sổ 5 phút để phản ánh burn rate nhanh; hai alert còn
+    lại dùng cửa sổ 10–15 phút để tránh báo động vì vài request lẻ.
+
 guardrails:
   error_rate_pct_max: 2
   daily_cost_usd_max: 2.5
