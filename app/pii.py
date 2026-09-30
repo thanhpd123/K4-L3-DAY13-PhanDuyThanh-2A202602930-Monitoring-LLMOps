@@ -4,15 +4,22 @@ import hashlib
 import re
 
 PII_PATTERNS: dict[str, str] = {
+    # Thứ tự trong dict rất quan trọng: pattern dài/cụ thể phải chạy trước pattern ngắn,
+    # nếu không số CCCD sẽ bị dán nhầm nhãn thành số điện thoại hoặc số tài khoản.
     "email": r"[\w\.-]+@[\w\.-]+\.\w+",
     "phone_vn": r"(?<!\d)(?:\+84|0)(?:[ .-]?\d){9}(?!\d)",
-    "cccd": r"\b\d{12}\b",
     "credit_card": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b",
-    # TODO: Add more patterns (e.g., Passport, Vietnamese address keywords)
+    "cccd": r"\b\d{12}\b",
+    "cmnd": r"\b\d{9}\b",
+    "passport_vn": r"\b[A-Z]\d{7}\b",
+    "bank_account_vn": r"\b\d{10,14}\b",
+    # Nhận cả dạng có dấu và không dấu, vì người dùng thường gõ không dấu khi chat.
+    "address_vn": r"(?i)\b(?:địa chỉ|dia chi|đ/c|address)\b\s*[:：]?\s*[^\n,;]{5,}",
 }
 
 
 def scrub_text(text: str) -> str:
+    """Thay mọi PII tìm thấy bằng token [REDACTED_<LOAI>] trước khi ghi log."""
     safe = text
     for name, pattern in PII_PATTERNS.items():
         safe = re.sub(pattern, f"[REDACTED_{name.upper()}]", safe)
