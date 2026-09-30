@@ -37,10 +37,11 @@
   <h1>K4-L3B Day 13 Monitoring & LLMOps — Dashboard runtime</h1>
   <div class="meta">
     <span>Nguồn dữ liệu: <strong>data/logs.jsonl</strong></span>
-    <span>Time range: <strong>10:01:17 → 11:01:17 (UTC+7, 60 phút)</strong></span>
+    <span>Time range: <strong>10:40:41 → 11:40:41 (UTC+7, 60 phút)</strong></span>
     <span>Refresh: <strong>30s</strong></span>
-    <span>Bản ghi API trong cửa sổ: <strong>140</strong></span>
-    <span>Dựng lúc: <strong>2026-09-30 11:01:21</strong></span>
+    <span>Bản ghi API trong cửa sổ: <strong>10</strong></span>
+    <span>Dựng lúc: <strong>2026-09-30 11:41:33</strong></span>
+    <span>Challenge: <strong>day13-k4-l3b-monitoring-llmops-v1</strong> — rag_slow (ngưỡng latency 2000 ms)</span>
   </div>
   <div class="grid">
         <section class="card" id="latency">
@@ -50,8 +51,8 @@
           </header>
           <p class="question">Request có chậm không? P50/P95/P99 và TTFT đang ở mức nào?</p>
           <p class="value">2,653 ms (P95)</p>
-          <p class="detail">P50 152 ms · P95 2,653 ms · P99 2,653 ms · TTFT P95 51 ms</p>
-          <div class="chart"><div class="bar" style="height:100%" title="10:48: 1.896e+04"></div><div class="bar" style="height:13%" title="10:49: 2,501"></div><div class="bar" style="height:13%" title="10:50: 2,495"></div><div class="bar" style="height:14%" title="10:51: 2,681"></div><div class="bar" style="height:14%" title="11:01: 2,564"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <p class="detail">P50 2,653 ms · P95 2,653 ms · P99 2,653 ms · TTFT P95 50 ms · ngưỡng challenge (day13-k4-l3b-monitoring-llmops-v1): p95 ≤ 2,000 ms → VƯỢT</p>
+          <div class="chart"><div class="bar" style="height:100%" title="11:40: 1.326e+04"></div></div><div class="axis"><span>11:40</span><span>11:40</span></div>
           <footer>
             <span>Đơn vị: <strong>ms</strong></span>
             <span>Ngưỡng: <strong>p95 lte 3000</strong></span>
@@ -63,9 +64,9 @@
             <span class="pill ok">ĐẠT NGƯỠNG</span>
           </header>
           <p class="question">Hệ thống đang nhận bao nhiêu request theo thời gian?</p>
-          <p class="value">5.33 req/phút</p>
-          <p class="detail">70 request trong 13.1 phút có dữ liệu (cửa sổ dashboard 60 phút)</p>
-          <div class="chart"><div class="bar" style="height:100%" title="10:48: 30"></div><div class="bar" style="height:33%" title="10:49: 10"></div><div class="bar" style="height:33%" title="10:50: 10"></div><div class="bar" style="height:33%" title="10:51: 10"></div><div class="bar" style="height:33%" title="11:01: 10"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <p class="value">5.00 req/phút</p>
+          <p class="detail">5 request trong 1.0 phút có dữ liệu (cửa sổ dashboard 60 phút)</p>
+          <div class="chart"><div class="bar" style="height:100%" title="11:40: 5"></div></div><div class="axis"><span>11:40</span><span>11:40</span></div>
           <footer>
             <span>Đơn vị: <strong>requests_per_minute</strong></span>
             <span>Ngưỡng: <strong>rate_per_minute gte 1</strong></span>
@@ -74,12 +75,12 @@
         <section class="card" id="errors">
           <header>
             <h2>Error rate and retrieval success</h2>
-            <span class="pill bad">VƯỢT NGƯỠNG</span>
+            <span class="pill ok">ĐẠT NGƯỠNG</span>
           </header>
           <p class="question">Error rate có tăng không, retrieval có đang fail không?</p>
-          <p class="value">5.71 % error rate</p>
-          <p class="detail">4 lỗi / 70 request · retrieval success 94% · breakdown {'RuntimeError': 4}</p>
-          <div class="chart"><div class="bar" style="height:100%" title="10:48: 4"></div></div><div class="axis"><span>10:48</span><span>10:48</span></div>
+          <p class="value">0.00 % error rate</p>
+          <p class="detail">0 lỗi / 5 request · retrieval success 100% · breakdown không có lỗi</p>
+          <p class="muted">Chưa có dữ liệu trong cửa sổ này</p>
           <footer>
             <span>Đơn vị: <strong>percent</strong></span>
             <span>Ngưỡng: <strong>error_rate_pct lte 2</strong></span>
@@ -91,9 +92,9 @@
             <span class="pill ok">ĐẠT NGƯỠNG</span>
           </header>
           <p class="question">Chi phí có tăng bất thường không?</p>
-          <p class="value">$0.136647</p>
-          <p class="detail">trung bình $0.002070 mỗi request</p>
-          <div class="chart"><div class="bar" style="height:100%" title="10:48: 0.05728"></div><div class="bar" style="height:31%" title="10:49: 0.01763"></div><div class="bar" style="height:35%" title="10:50: 0.02021"></div><div class="bar" style="height:39%" title="10:51: 0.02258"></div><div class="bar" style="height:33%" title="11:01: 0.01894"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <p class="value">$0.011505</p>
+          <p class="detail">trung bình $0.002301 mỗi request</p>
+          <div class="chart"><div class="bar" style="height:100%" title="11:40: 0.0115"></div></div><div class="axis"><span>11:40</span><span>11:40</span></div>
           <footer>
             <span>Đơn vị: <strong>usd</strong></span>
             <span>Ngưỡng: <strong>total lte 2.5</strong></span>
@@ -105,9 +106,9 @@
             <span class="pill ok">ĐẠT NGƯỠNG</span>
           </header>
           <p class="question">Input/output token có dài bất thường không?</p>
-          <p class="value">2,364 in / 8,637 out</p>
-          <p class="detail">tổng 11,001 token trên 66 phản hồi</p>
-          <div class="chart"><div class="bar" style="height:100%" title="10:48: 4,534"></div><div class="bar" style="height:32%" title="10:49: 1,446"></div><div class="bar" style="height:36%" title="10:50: 1,618"></div><div class="bar" style="height:41%" title="10:51: 1,870"></div><div class="bar" style="height:34%" title="11:01: 1,533"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <p class="value">175 in / 732 out</p>
+          <p class="detail">tổng 907 token trên 5 phản hồi</p>
+          <div class="chart"><div class="bar" style="height:100%" title="11:40: 907"></div></div><div class="axis"><span>11:40</span><span>11:40</span></div>
           <footer>
             <span>Đơn vị: <strong>tokens</strong></span>
             <span>Ngưỡng: <strong>sum_by_field lte 50000</strong></span>
@@ -119,9 +120,9 @@
             <span class="pill ok">ĐẠT NGƯỠNG</span>
           </header>
           <p class="question">Quality proxy có giảm dưới mức chấp nhận được không?</p>
-          <p class="value">0.879 / 1</p>
-          <p class="detail">trung bình trên 66 phản hồi đã chấm</p>
-          <div class="chart"><div class="bar" style="height:100%" title="10:48: 22.8"></div><div class="bar" style="height:39%" title="10:49: 8.8"></div><div class="bar" style="height:39%" title="10:50: 8.8"></div><div class="bar" style="height:39%" title="10:51: 8.8"></div><div class="bar" style="height:39%" title="11:01: 8.8"></div></div><div class="axis"><span>10:48</span><span>11:01</span></div>
+          <p class="value">0.840 / 1</p>
+          <p class="detail">trung bình trên 5 phản hồi đã chấm</p>
+          <div class="chart"><div class="bar" style="height:100%" title="11:40: 4.2"></div></div><div class="axis"><span>11:40</span><span>11:40</span></div>
           <footer>
             <span>Đơn vị: <strong>score_0_to_1</strong></span>
             <span>Ngưỡng: <strong>mean gte 0.75</strong></span>

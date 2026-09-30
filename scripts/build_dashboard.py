@@ -35,6 +35,7 @@ from app.cli import configure_utf8_stdio  # noqa: E402  (cần sys.path ở trê
 
 LOG_PATH = Path("data/logs.jsonl")
 CONTRACT_PATH = REPO_ROOT / "config" / "dashboard.yaml"
+CHALLENGE_PATH = REPO_ROOT / "config" / "challenge.json"
 OUT_PATH = REPO_ROOT / "dashboard" / "index.html"
 
 # Log ghi theo UTC; hiển thị theo giờ Việt Nam cho dễ đọc khi chụp evidence.
@@ -96,7 +97,22 @@ def per_minute(records: list[dict], value_of) -> list[tuple[str, float]]:
     return sorted(buckets.items())
 
 
-def build_panels(records: list[dict], contract: dict, span_minutes: float) -> list[dict]:
+def load_challenge(path: Path) -> dict | None:
+    """Đọc config/challenge.json nếu có (file này không được commit).
+
+    Dùng để hiển thị ngưỡng latency của challenge bên cạnh ngưỡng SLO,
+    vì challenge có ngưỡng riêng (ví dụ 2000ms) chặt hơn SLO 3000ms.
+    """
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def build_panels(records: list[dict], contract: dict, span_minutes: float, challenge: dict | None) -> list[dict]:
     panels_by_id = {panel["id"]: panel for panel in contract["dashboard"]["panels"]}
     received = [r for r in records if r.get("event") == "request_received"]
     sent = [r for r in records if r.get("event") == "response_sent"]
@@ -128,6 +144,17 @@ def build_panels(records: list[dict], contract: dict, span_minutes: float) -> li
         return f"{threshold['aggregation']} {threshold['operator']} {threshold['value']:g}", ok
 
     latency_rule, latency_ok = threshold_text("latency", latency_p95)
+    latency_detail = (
+        f"P50 {percentile(latency, 50):,.0f} ms · P95 {latency_p95:,.0f} ms · "
+        f"P99 {percentile(latency, 99):,.0f} ms · TTFT P95 {percentile(ttft, 95):,.0f} ms"
+    )
+    if challenge and isinstance(challenge.get("latency_threshold_ms"), (int, float)):
+        limit = challenge["latency_threshold_ms"]
+        verdict = "VƯỢT" if latency_p95 > limit else "ĐẠT"
+        latency_detail += (
+            f" · ngưỡng challenge ({challenge.get('challenge_id', 'challenge')}): "
+            f"p95 ≤ {limit:,.0f} ms → {verdict}"
+        )
     traffic_rule, traffic_ok = threshold_text("traffic", traffic_rate)
     errors_rule, errors_ok = threshold_text("errors", error_rate)
     cost_rule, cost_ok = threshold_text("cost", sum(costs))
@@ -140,10 +167,7 @@ def build_panels(records: list[dict], contract: dict, span_minutes: float) -> li
             "title": panels_by_id["latency"]["title"],
             "question": "Request có chậm không? P50/P95/P99 và TTFT đang ở mức nào?",
             "value": f"{latency_p95:,.0f} ms (P95)",
-            "detail": (
-                f"P50 {percentile(latency, 50):,.0f} ms · P95 {latency_p95:,.0f} ms · "
-                f"P99 {percentile(latency, 99):,.0f} ms · TTFT P95 {percentile(ttft, 95):,.0f} ms"
-            ),
+            "detail": latency_detail,
             "unit": panels_by_id["latency"]["unit"],
             "rule": latency_rule,
             "ok": latency_ok,
@@ -230,7 +254,7 @@ def sparkline(series: list[tuple[str, float]]) -> str:
     )
 
 
-def render(records: list[dict], contract: dict, panels: list[dict], window_start, window_end) -> str:
+def render(records: list[dict], contract: dict, panels: list[dict], window_start, window_end, challenge: dict | None) -> str:
     total = len(records)
     cards = []
     for panel in panels:
@@ -255,6 +279,13 @@ def render(records: list[dict], contract: dict, panels: list[dict], window_start
         )
 
     generated_at = datetime.now(LOCAL_TZ).strftime("%Y-%m-%d %H:%M:%S")
+    challenge_meta = ""
+    if challenge:
+        challenge_meta = (
+            f"<span>Challenge: <strong>{challenge.get('challenge_id', 'không rõ')}</strong>"
+            f" — {challenge.get('incident', 'không rõ')} (ngưỡng latency "
+            f"{challenge.get('latency_threshold_ms', '?')} ms)</span>"
+        )
     return f"""<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -298,6 +329,7 @@ def render(records: list[dict], contract: dict, panels: list[dict], window_start
     <span>Refresh: <strong>{contract['dashboard']['refresh_seconds']}s</strong></span>
     <span>Bản ghi API trong cửa sổ: <strong>{total}</strong></span>
     <span>Dựng lúc: <strong>{generated_at}</strong></span>
+    {challenge_meta}
   </div>
   <div class="grid">{''.join(cards)}
   </div>
@@ -315,6 +347,7 @@ def main() -> int:
     args = parser.parse_args()
 
     contract = yaml.safe_load(args.contract.read_text(encoding="utf-8"))
+    challenge = load_challenge(CHALLENGE_PATH)
     records = load_records(args.log)
 
     latest = max(record["_ts"] for record in records)
@@ -323,13 +356,14 @@ def main() -> int:
     earliest = min(record["_ts"] for record in windowed)
     span_minutes = max((latest - earliest).total_seconds() / 60, 1.0)
 
-    panels = build_panels(windowed, contract, span_minutes)
+    panels = build_panels(windowed, contract, span_minutes, challenge)
     html = render(
         windowed,
         contract,
         panels,
         window_start_dt.astimezone(LOCAL_TZ).strftime("%H:%M:%S"),
         latest.astimezone(LOCAL_TZ).strftime("%H:%M:%S"),
+        challenge,
     )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(html, encoding="utf-8")
