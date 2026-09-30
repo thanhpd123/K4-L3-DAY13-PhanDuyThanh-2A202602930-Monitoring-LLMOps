@@ -66,6 +66,7 @@ Giữ đúng ba output text và năm ảnh dưới đây. Không tách thêm ả
   - v1 / `baseline`: `c5870547c480b4a09e6a4e1539d35478` (`req-499f4ec5`), `4fe9a94c0b3f1b4963637907de427a88` (`req-96218184`).
   - v1 / `production` (lần chạy challenge): `bad7b8995ae76ef45e49133446d1614f` (`req-2d85f516`).
   - v3 / `candidate`: `292b06a766321ad28f1c20cf7235e385` (`req-1777839b`), `3ec93168c9e886d3efdfc770b14b2868` (`req-06ba8957`).
+  - v3 / `production` (trace chụp lúc đã promote, trước khi rollback): `9bfa6a1c2cf1fbd71dbade7b2fad1522` (`req-898ef3a7`) — metadata ghi `prompt_label=production`, `prompt_version=3`; sau đó label `production` được chuyển về version 1.
 - **Số liệu so sánh trên cùng một bộ 10 input:**
 
   | Chỉ số                 | `baseline` (v1) | `candidate` (v3) | Thay đổi   |
@@ -83,6 +84,7 @@ Giữ đúng ba output text và năm ảnh dưới đây. Không tách thêm ả
 
 - **Dashboard và sáu panel:**
   Dashboard runtime là `dashboard/index.html`, sinh bằng `scripts/build_dashboard.py` đọc trực tiếp `data/logs.jsonl` và lấy ngưỡng/đơn vị/time range từ `config/dashboard.yaml`: Latency (P50/P95/P99 + TTFT P95), Traffic (request/phút), Errors (error rate + breakdown `error_type` + retrieval success), Cost, Tokens, Quality. Mỗi panel ghi rõ đơn vị, ngưỡng, trạng thái ĐẠT/VƯỢT ngưỡng và sparkline theo phút; dashboard còn hiển thị thêm challenge id và ngưỡng latency của challenge để đối chiếu.
+  Lưu ý khi đọc ảnh `05-dashboard-incident.png`: panel **Traffic** báo "VƯỢT NGƯỠNG" vì lưu lượng của buổi lab (0,95 req/phút với 15 request trong 15,8 phút) thấp hơn ngưỡng tối thiểu 1 req/phút của hợp đồng — đây là đặc thù dữ liệu demo, không phải sự cố. Sự cố thật nằm ở panel **Latency**: P95 2653 ms so với ngưỡng challenge 2000 ms → VƯỢT.
 - **SLO và lý do chọn:**
   SLO `fast_successful_requests`: 99,5% request có `latency_ms ≤ 3000` trong cửa sổ 28 ngày. Ngưỡng 3000 ms chọn từ baseline thật của bài (P50 ≈ 152 ms, P95 ≈ 153 ms, TTFT P95 ≈ 51 ms) — rộng hơn tail latency bình thường nhưng vẫn bắt được sự cố retrieval.
 - **Cách tính error budget:**
